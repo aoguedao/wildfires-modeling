@@ -17,13 +17,21 @@ logger = logging.getLogger(__name__)
 
 def profile(input_data, profile_path):
     logger.info("Data profiling.")
+    today = date.today()
+    df = input_data.drop(columns="geometry")
     profile = ProfileReport(
-        input_data.drop(columns="geometry"),
+        df,
         title="Estadística Descriptiva Incendios Edificios",
         explorative=True
     )
-    today = date.today()
     profile.to_file(profile_path / f"edificaciones-profile-{today.strftime('%Y-%m-%d')}.html")
+    for name, group in df.groupby("wildfire"):
+        profile = ProfileReport(
+            group,
+            title=f"Estadística Descriptiva Incendio {name.title()}",
+            explorative=True
+        )
+        profile.to_file(profile_path / f"edificaciones-{name}-profile-{today.strftime('%Y-%m-%d')}.html")
 
 
 def eda(input_data, images_path):

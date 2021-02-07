@@ -86,14 +86,14 @@ NUM_COLUMNS = [
     "dist_foco",
     "dist_estru",
     "tamaño",
-    "codigo_pol",
+    # "codigo_pol",  # CATEGORICAL
     "sup_viv_ha",
     "raz_ocup",
-    "n_conjman",
+    # "n_conjman",  # CATEGORICAL
     "d_conj_man",
-    "n_conj10m",
+    # "n_conj10m",  # CATEGORICAL
     "d_conj_10m",
-    "n_conj20m",
+    # "n_conj20m",  # CATEGORICAL
     "d_conj_20m",
     "cord_x",
     "cord_y",
@@ -103,11 +103,40 @@ CAT_COLUMNS = [
     "wildfire",
     "material",
     "orientacio",
+    "codigo_pol",  # NUMERIC
     "prep_vivie",
     "mant_viv",
     "acceso_equ",
     "ac_supresi",
     "fact_agua",
+    "n_conjman",  # NUMERIC
+    "n_conj10m",  # NUMERIC
+    "n_conj20m",  # NUMERIC
 ]
 
 TARGET_COLUMN = "n_daño"
+
+X_COLUMNS = [
+    "material",
+    "npisos",
+    "h_viv",
+    "orientacio",
+    "elevación",
+    "pendiente",
+    "dist_veget",
+    "dist_foco",
+    "dist_estru",
+    "tamaño",
+    "sup_viv_ha",
+    "raz_ocup",
+    "prep_vivie",
+    "mant_viv",
+    "acceso_equ",
+    "ac_supresi",
+    "fact_agua",
+    "d_conj_man",
+    "d_conj_10m",
+    "d_conj_20m",
+    "cord_x",
+    "cord_y"    
+]
