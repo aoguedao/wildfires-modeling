@@ -116,6 +116,12 @@ CAT_COLUMNS = [
 
 TARGET_COLUMN = "n_daño"
 
+BINARY_TARGET_VALUES = {
+    "Total": "Dañada",
+    "Parcial": "Dañada",
+    "Ninguno": "Sin Daño"
+}
+
 X_COLUMNS = [
     "material",
     "npisos",

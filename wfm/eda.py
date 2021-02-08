@@ -1,11 +1,10 @@
 import logging
 import numpy as np
-# import pandas as pd
+import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
 from pandas_profiling import ProfileReport
-from datetime import date
 from itertools import permutations
 from pandas.api.types import CategoricalDtype
 
@@ -15,26 +14,28 @@ from wfm.constants import TARGET_COLUMN, NUM_COLUMNS, CAT_COLUMNS, SPANISH_NAMES
 logger = logging.getLogger(__name__)
 
 
-def profile(input_data, profile_path):
+def profile(input_data, output_path):
     logger.info("Data profiling.")
-    today = date.today()
+    profile_path = output_path / "profiles"
+    profile_path.mkdir(parents=True, exist_ok=True)
     df = input_data.drop(columns="geometry")
     profile = ProfileReport(
         df,
         title="Estadística Descriptiva Incendios Edificios",
         explorative=True
     )
-    profile.to_file(profile_path / f"edificaciones-profile-{today.strftime('%Y-%m-%d')}.html")
+    profile.to_file(profile_path / "input-data-profile.html")
     for name, group in df.groupby("wildfire"):
         profile = ProfileReport(
             group,
             title=f"Estadística Descriptiva Incendio {name.title()}",
             explorative=True
         )
-        profile.to_file(profile_path / f"edificaciones-{name}-profile-{today.strftime('%Y-%m-%d')}.html")
+        profile.to_file(profile_path / f"data-{name}-profile.html")
 
 
-def eda(input_data, images_path):
+def eda(input_data, output_path, images_path):
+    descriptive(input_data, output_path)
     cat_histograms(input_data, images_path)
     num_histograms(input_data, images_path)
     num_scatters(input_data, images_path)
@@ -42,7 +43,28 @@ def eda(input_data, images_path):
     # pairplot(input_data, images_path)
 
 
+def descriptive(input_data, output_path):
+    input_data = input_data.drop(columns="geometry")
+    descriptive_all = input_data.describe(include="all").T
+    descriptive_grouped = (
+        pd.concat(
+            {
+                name: group.describe(include="all").drop(columns="wildfire").T
+                for name, group in input_data.groupby("wildfire")
+            }
+        )
+    )
+    with pd.ExcelWriter(output_path / "descriptive_statistics.xlsx") as writer:  
+        descriptive_all.to_excel(writer, sheet_name="All")
+        descriptive_grouped.to_excel(writer, sheet_name="Grouped")
+
+
 def cat_histograms(input_data, images_path):
+    histogram_path = images_path / "histogram"
+    histogram_path.mkdir(parents=True, exist_ok=True)
+    input_data = (
+        input_data.astype({col: CategoricalDtype(ordered=True) for col in CAT_COLUMNS + [TARGET_COLUMN]})
+    )
     redable_target = SPANISH_NAMES[TARGET_COLUMN]
     for col in CAT_COLUMNS:
         logger.info(f"Categorical histogram {col}")
@@ -69,11 +91,13 @@ def cat_histograms(input_data, images_path):
         plt.xticks(rotation=50.4, horizontalalignment="left")
         plt.title(f"Histograma de {redable_col} por {redable_target}")
         plt.tight_layout()
-        plt.savefig(images_path / f"cat_histogram_{col}.png")
+        plt.savefig(histogram_path / f"cat_histogram_{col}.png")
         plt.close()
 
 
 def num_histograms(input_data, images_path):
+    histogram_path = images_path / "histogram"
+    histogram_path.mkdir(parents=True, exist_ok=True)
     df = (
         input_data.copy()#.fillna("N/A")
         # .astype({col: "category" for col in CAT_COLUMNS})
@@ -99,7 +123,7 @@ def num_histograms(input_data, images_path):
         plt.xticks(rotation=50.4, horizontalalignment="left")
         plt.title(f"Histograma de {redable_col} por {redable_target}")
         plt.tight_layout()
-        plt.savefig(images_path / f"histogram_{col}.png")
+        plt.savefig(histogram_path / f"histogram_{col}.png")
         plt.close()
 
 
