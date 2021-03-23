@@ -34,13 +34,21 @@ BUILDING_COLUMNS = [
 INPUT_COLUMNS = ["wildfire"] + BUILDING_COLUMNS
 
 FIX_BUILDING_COLUMN_NAMES = {
+    "n_pisos": "npisos",
     "dist_foc_1": "dist_foco",
     "elevacion": "elevación",
     "preparacio": "prep_vivie",
     "raz_ocupac": "raz_ocup",
     "sup_ha": "sup_viv_ha",
     "tamañano_": "tamaño",
-    "tamaño_vi": "tamaño"
+    "tamaño_vi": "tamaño",
+    "orientaci": "orientacio",
+    "n_conj_man": "n_conjman",
+    "di_conjman": "d_conj_man",
+    "n_conj_10m": "n_conj10m",
+    "di_conj10m": "d_conj_10m",
+    "n_conj_20m": "n_conj20m",
+    "di_conj20m": "d_conj_20m",
 }
 
 SPANISH_NAMES = {
@@ -95,15 +103,15 @@ NUM_COLUMNS = [
     "d_conj_10m",
     # "n_conj20m",  # CATEGORICAL
     "d_conj_20m",
-    "cord_x",
-    "cord_y",
+    # "cord_x",
+    # "cord_y",
 ]
 
 CAT_COLUMNS = [
     "wildfire",
     "material",
     "orientacio",
-    "codigo_pol",  # NUMERIC
+    # "codigo_pol",  # NUMERIC
     "prep_vivie",
     "mant_viv",
     "acceso_equ",
@@ -122,7 +130,9 @@ BINARY_TARGET_VALUES = {
     "Ninguno": "Sin Daño"
 }
 
-X_COLUMNS = [
+X_COLUMNS = [   
+    # "id",
+    # "año",
     "material",
     "npisos",
     "h_viv",
@@ -133,6 +143,7 @@ X_COLUMNS = [
     "dist_foco",
     "dist_estru",
     "tamaño",
+    # "codigo_pol",
     "sup_viv_ha",
     "raz_ocup",
     "prep_vivie",
@@ -140,9 +151,12 @@ X_COLUMNS = [
     "acceso_equ",
     "ac_supresi",
     "fact_agua",
+    # "n_conjman",
     "d_conj_man",
-    "d_conj_10m",
-    "d_conj_20m",
-    "cord_x",
-    "cord_y"    
+    # "n_conj10m",
+    # "d_conj_10m",
+    # "n_conj20m",
+    # "d_conj_20m",
+    # "cord_x",
+    # "cord_y",
 ]

@@ -20,12 +20,27 @@ def get_input_filepaths(input_path):
 
 
 def read_building(filepath):
+    logger.info(f"Reading {filepath} file.")
     df = (
         gpd.read_file(filepath)
         .rename(columns=lambda x: x.strip().lower())
         .rename(columns=FIX_BUILDING_COLUMN_NAMES)
-        .loc[:, BUILDING_COLUMNS]
+        .pipe(add_missing_columns, columns=BUILDING_COLUMNS)
+        # .loc[:, BUILDING_COLUMNS]
     )
+    if set(BUILDING_COLUMNS) != set(df.columns):
+        leftover_cols = df.columns.difference(BUILDING_COLUMNS)
+        logger.warning(f"There are leftover columns: {leftover_cols}")
+    return df
+
+
+def add_missing_columns(df, columns):
+    df = df.copy()
+    current_cols = set(df.columns)
+    missing_cols = set(columns) - current_cols
+    for col in missing_cols:
+        logger.warning(f"Adding column {col} with null values.")
+        df[col] = np.nan
     return df
 
 

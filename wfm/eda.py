@@ -40,7 +40,7 @@ def eda(input_data, output_path, images_path):
     num_histograms(input_data, images_path)
     num_scatters(input_data, images_path)
     correlation(input_data, images_path)
-    # pairplot(input_data, images_path)
+    # pairplot(input_data, images_path)  # Deprecated
 
 
 def descriptive(input_data, output_path):
@@ -180,7 +180,7 @@ def correlation(input_data, images_path):
     # Generate a mask for the upper triangle
     mask = np.triu(np.ones_like(corr, dtype=bool))
 
-    plt.figure(figsize=(20, 20))
+    plt.figure(figsize=(10, 10))
     sns.heatmap(
         corr,
         mask=mask,
@@ -194,9 +194,9 @@ def correlation(input_data, images_path):
         linewidths=.5,
         cbar_kws={"shrink": .3}
     )
-    plt.xticks(rotation=50.4, horizontalalignment="left")
-    plt.yticks(rotation=50.4, horizontalalignment="right")
+    plt.xticks(rotation=45, horizontalalignment="right")
+    plt.yticks(rotation=45, horizontalalignment="right")
     plt.title("Correlación entre variables numéricas")
     plt.tight_layout()
-    plt.savefig(images_path / f"correlation.png")
+    plt.savefig(images_path / f"correlation.png", dpi=300)
     plt.close()

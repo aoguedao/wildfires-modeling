@@ -1,15 +1,16 @@
 import logging
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
 import lightgbm as lgb
 import shap
 import h5py
 
 from pathlib import Path
-from datetime import date
+# from datetime import date
 from joblib import dump
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, cross_validate, RepeatedStratifiedKFold
 from sklearn.metrics import classification_report
 
 from wfm.utils import get_display_and_numeric_data
@@ -61,6 +62,30 @@ def model_and_explanation(
             y_pred,
         )
     )
+    
+    # Cross Validation
+    cv_model = cross_validate(
+        model,
+        X,
+        y,
+        cv=RepeatedStratifiedKFold(n_splits=4, n_repeats=30, random_state=42),
+        return_train_score=True,
+        return_estimator=True,
+        n_jobs=-1
+    )
+    cv_scores = pd.DataFrame(
+        {"Train": cv_model["train_score"],
+        "Test": cv_model["test_score"]
+        }
+    )
+    plt.figure(figsize=(10, 9))
+    sns.boxplot(data=cv_scores, orient='v', color='cyan', saturation=0.5)
+    plt.ylabel("Score")
+    plt.title(f"Accuracy for Train and Test sets using Repeated Stratified KFold")
+    plt.tight_layout()
+    plt.savefig(images_path / f"cv_score.png", dpi=300)
+    plt.show()
+    plt.close()
 
     # --- Model Explanation ---
     logger.info("Model Explanation.")
@@ -81,39 +106,89 @@ def model_and_explanation(
 
 def summary_plot(X, model, shap_values, images_path):
     logger.info("SHAP Summary Plot.")
-    shap.summary_plot(
-        shap_values,
-        X,
-        max_display=X.shape[1],
-        class_names=model.classes_,
-        title=f"SHAP Summary Plot for {model.get_params().get('objective')} model.",
-        show=False
+    nclasses = len(model.classes_)
+    if nclasses > 2:
+        shap.summary_plot(
+            shap_values,
+            X,
+            max_display=X.shape[1],
+            class_names=model.classes_,
+            show=False
+        )
+    elif nclasses == 2:
+        damage_idx = model.classes_.searchsorted("Dañada")
+        shap.summary_plot(
+            shap_values[damage_idx],
+            X,
+            max_display=X.shape[1],
+            class_names=model.classes_[damage_idx],
+            show=False
+        )
+    else:
+        raise NotImplementedError
+    fig = plt.gcf()
+    fig.suptitle(
+        f"SHAP Summary Plot for {model.get_params().get('objective')} model.",
+        fontsize=14
     )
     plt.tight_layout()
     plt.savefig(images_path / f"shap_summary.png", dpi=300)
     plt.show()
     plt.close()
 
+    for i in range(len(shap_values)):
+        model_class = model.classes_[i]
+        shap.summary_plot(
+            shap_values[i],
+            X,
+            max_display=X.shape[1],
+            class_names=model_class,
+            show=False
+        )
+        fig = plt.gcf()
+        fig.suptitle(
+            f"SHAP Summary Plot for {model.get_params().get('objective')} model and {model_class} class",
+            fontsize=14
+        )
+        plt.tight_layout()
+        plt.savefig(images_path / f"shap_summary_scatter_{model_class}.png", dpi=300)
+        plt.show()
+        plt.close()
+
 
 def dependence_plot(X, X_display, model, shap_values, images_path):
     nclasses = len(model.classes_)
     for col in X.columns:
         logger.info(f"SHAP Depence Plot for {col}")
-        fig, axes = plt.subplots(ncols=nclasses, figsize=(7 * nclasses, 5), sharey=True)
-        for i, ax in enumerate(axes):
+        if nclasses == 2:
+            damage_idx = model.classes_.searchsorted("Dañada")
+            fig, ax = plt.subplots(figsize=(7, 5))
             shap.dependence_plot(
                 col,
-                shap_values[i],
+                shap_values[damage_idx],
                 X,
                 display_features=X_display,
                 interaction_index=None,
-                title=model.classes_[i],
+                title=model.classes_[damage_idx],
                 ax=ax,
                 show=False
             )
+        else:
+            fig, axes = plt.subplots(ncols=nclasses, figsize=(7 * nclasses, 5), sharey=True)
+            for i, ax in enumerate(axes):
+                shap.dependence_plot(
+                    col,
+                    shap_values[i],
+                    X,
+                    display_features=X_display,
+                    interaction_index=None,
+                    title=model.classes_[i],
+                    ax=ax,
+                    show=False
+                )
         fig.suptitle(
             f"SHAP dependence plot for '{SPANISH_NAMES[col]}' feature",
-            fontsize=16
+            fontsize=14
         )
         fig.tight_layout()
         fig.savefig(images_path / f"shap_dependence_{col}.png", dpi=300)
