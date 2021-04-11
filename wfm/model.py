@@ -25,7 +25,7 @@ def model_and_explanation(
     model_parameters,
     output_path,
     images_path,
-    test_size=0.3,
+    test_size=0.25,
     split_random_state=42,
     model_random_state=42,
 ):
@@ -56,13 +56,12 @@ def model_and_explanation(
     # --- Model Evaluation  ---
     logger.info("Classification Report.")
     y_pred = model.predict(X_test)
-    print(
+    logger.info("\n" +
         classification_report(
             y_test,
             y_pred,
         )
     )
-    
     # Cross Validation
     cv_model = cross_validate(
         model,

@@ -25,7 +25,12 @@ def get_cat_code_dict(df, col):
     return d
 
 
-def get_display_and_numeric_data(input_data, X_COLUMNS, TARGET_COLUMN, model_objective):
+def get_display_and_numeric_data(
+    input_data,
+    X_COLUMNS,
+    TARGET_COLUMN,
+    model_objective="multiclass"
+):
     # --- Data for display ---
     X_display = (
         input_data.loc[:, X_COLUMNS]
@@ -34,6 +39,7 @@ def get_display_and_numeric_data(input_data, X_COLUMNS, TARGET_COLUMN, model_obj
     y = input_data[TARGET_COLUMN]
     if model_objective == "binary":
         y = y.map(BINARY_TARGET_VALUES)
+        # y = y.eq("Dañada").astype(int)
 
     # --- Data for algorithm ---
     X = X_display.copy()
