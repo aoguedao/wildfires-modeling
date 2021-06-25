@@ -1,4 +1,5 @@
 import logging
+from matplotlib.colors import Normalize
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -54,10 +55,32 @@ def descriptive(input_data, output_path):
             }
         )
     )
-    with pd.ExcelWriter(output_path / "descriptive_statistics.xlsx") as writer:  
+    descriptive_target = (
+        pd.concat(
+            {
+                name: group.describe(include="all").drop(columns="n_daño").T
+                for name, group in input_data.groupby("n_daño")
+            }
+        )
+    )
+    target_balance = (
+        input_data["n_daño"]
+        .pipe(
+            lambda x:
+            pd.concat(
+                {
+                    "n_records": x.value_counts(dropna=False),
+                    "perc_records": x.value_counts(normalize=True, dropna=False) * 100
+                },
+                axis=1
+            )
+        )
+    )
+    with pd.ExcelWriter(output_path / "descriptive_statistics.xlsx") as writer:
         descriptive_all.to_excel(writer, sheet_name="All")
-        descriptive_grouped.to_excel(writer, sheet_name="Grouped")
-
+        descriptive_grouped.to_excel(writer, sheet_name="Per Wildfire")
+        descriptive_target.to_excel(writer, sheet_name="Per Target Label")
+        target_balance.to_excel(writer, sheet_name="Target Balance")
 
 def cat_histograms(input_data, images_path):
     histogram_path = images_path / "histogram"

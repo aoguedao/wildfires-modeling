@@ -10,9 +10,10 @@ BUILDING_COLUMNS = [
     "pendiente",
     "dist_veget",
     "dist_foco",
+    "dist_sup",
     "dist_estru",
     "tamaño",
-    "codigo_pol",
+    # "codigo_pol",
     "sup_viv_ha",
     "raz_ocup",
     "prep_vivie",
@@ -63,7 +64,8 @@ SPANISH_NAMES = {
     "elevación": "Elevación",
     "pendiente": "Pendiente",
     "dist_veget": "Dist. a Grupo Vegetal",
-    "dist_foco": "Dist. al Foco",
+    "dist_foco": "Dist. Proy. a Foco",
+    "dist_sup": "Dist. a Foco",
     "dist_estru": "Dist. a otra Estructura",
     "tamaño": "Tamaño",
     "codigo_pol": "Nro. Polígono Identificatorio",
@@ -92,16 +94,13 @@ NUM_COLUMNS = [
     "pendiente",
     "dist_veget",
     "dist_foco",
+    "dist_sup",
     "dist_estru",
     "tamaño",
-    # "codigo_pol",  # CATEGORICAL
     "sup_viv_ha",
     "raz_ocup",
-    # "n_conjman",  # CATEGORICAL
     "d_conj_man",
-    # "n_conj10m",  # CATEGORICAL
     "d_conj_10m",
-    # "n_conj20m",  # CATEGORICAL
     "d_conj_20m",
     # "cord_x",
     # "cord_y",
@@ -117,9 +116,9 @@ CAT_COLUMNS = [
     "acceso_equ",
     "ac_supresi",
     "fact_agua",
-    "n_conjman",  # NUMERIC
-    "n_conj10m",  # NUMERIC
-    "n_conj20m",  # NUMERIC
+    "n_conjman",
+    "n_conj10m",
+    "n_conj20m",
 ]
 
 TARGET_COLUMN = "n_daño"
@@ -130,19 +129,20 @@ BINARY_TARGET_VALUES = {
     "Ninguno": "Sin Daño"
 }
 
-X_COLUMNS = [   
+X_COLUMNS = [
     # "id",
     # "año",
     "material",
     "npisos",
-    "h_viv",
+    # "h_viv",
     "orientacio",
     "elevación",
     "pendiente",
     "dist_veget",
-    "dist_foco",
+    # "dist_foco",
+    "dist_sup",
     "dist_estru",
-    "tamaño",
+    # "tamaño",
     # "codigo_pol",
     "sup_viv_ha",
     "raz_ocup",

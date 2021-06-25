@@ -1,6 +1,9 @@
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import confusion_matrix
 
 from wfm.constants import BINARY_TARGET_VALUES
+
 
 def get_cat_code_dict(df, col):
     """Returns a dict to pase a categorical column to another categorical but using integer codes in order to use it with shap functions.
@@ -9,7 +12,7 @@ def get_cat_code_dict(df, col):
     ----------
     df : pd.DataFrame
     col : str
-        Column to transform    
+        Column to transform
 
     Returns
     -------
@@ -24,23 +27,19 @@ def get_cat_code_dict(df, col):
     )
     return d
 
-
 def get_display_and_numeric_data(
     input_data,
     X_COLUMNS,
     TARGET_COLUMN,
-    model_objective="multiclass"
 ):
     # --- Data for display ---
     X_display = (
         input_data.loc[:, X_COLUMNS]
         .pipe(lambda x: pd.DataFrame(x))
     )
-    y = input_data[TARGET_COLUMN]
-    if model_objective == "binary":
-        y = y.map(BINARY_TARGET_VALUES)
-        # y = y.eq("Dañada").astype(int)
-
+    y_display = input_data[TARGET_COLUMN]
+    y_display = y_display.map(BINARY_TARGET_VALUES)
+    y = y_display.eq("Dañada").astype(int).to_numpy()
     # --- Data for algorithm ---
     X = X_display.copy()
     cat_codes = {
@@ -50,4 +49,13 @@ def get_display_and_numeric_data(
     for col, d in cat_codes.items():
         X.loc[:, col] = X[col].map(d)
 
-    return X_display, X, y
+    return X_display, y_display, X, y
+
+
+def _recall(y_true, y_pred):
+    tn, fp, fn, tp = confusion_matrix(y_true.astype(int), (y_pred > 0.5).astype(int)).ravel()
+    return tp / (tp + fn)
+
+
+def recall(y_true, y_pred):
+    return 'Recall', _recall(y_true, y_pred), True
