@@ -30,7 +30,6 @@ def model_and_explanation(
 
     logger.info("Getting and spliting data.")
     # --- Design matrix and target vector ---
-    model_objective = "binary"
     X_display, y_display, X, y = get_display_and_numeric_data(
         input_data,
         X_COLUMNS,
@@ -46,7 +45,6 @@ def model_and_explanation(
 
     # --- LightGBM Model  ---
     logger.info("Fitting the model.")
-    # breakpoint()
     model = lgb.LGBMClassifier(**model_parameters, random_state=model_random_state)
     _ = model.fit(
         X_train,
@@ -80,6 +78,78 @@ def model_and_explanation(
     dependence_plot(X, X_display, model, shap_values, images_path)
 
     return X_display, y_display, X, y, model, shap_values
+
+
+def group_model_and_explanation(
+    input_data,
+    model_parameters,
+    output_path,
+    images_path,
+    model_random_state=42,
+):
+    # --- Design matrix and target vector ---
+    X_display, y_display, X, y = get_display_and_numeric_data(
+        input_data,
+        X_COLUMNS + ["wildfire"],
+        TARGET_COLUMN,
+    )
+    metrics_file = output_path / f"wildfire_batch_metrics.txt"
+    metrics_file.unlink(missing_ok=True)
+    for wildfire in X_display["wildfire"].unique():
+        wildfire_images_path = images_path / wildfire
+        wildfire_images_path.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Model using {wildfire} as test set.")
+        wildfire_mask = X_display["wildfire"].eq(wildfire)
+        X_train = X.loc[~wildfire_mask, :].drop(columns=["wildfire"])
+        y_train = y[~wildfire_mask]
+        X_test = X.loc[wildfire_mask, :].drop(columns=["wildfire"])
+        y_test = y[wildfire_mask]
+
+        model = lgb.LGBMClassifier(**model_parameters, random_state=model_random_state)
+        _ = model.fit(
+            X_train,
+            y_train,
+            eval_set=[(X_test, y_test)],
+            eval_metric=recall,
+
+        )
+        # --- Model Evaluation  ---
+        train_classification_report = classification_report(
+            y_train,
+            model.predict(X_train),
+        )
+        test_classification_report = classification_report(
+            y_test,
+            model.predict(X_test),
+        )
+        with open(metrics_file, "a") as f:
+            f.write("#" * 80)
+            f.write(f"\n{wildfire} as test set\n")
+            f.write("#" * 80)
+            f.write("\n\nTrain classification report\n\n")
+            f.write(train_classification_report)
+            f.write("\n\nTest classification report\n\n")
+            f.write(test_classification_report)
+            f.write("\n")
+
+        # --- Model Explanation ---
+        explainer = shap.TreeExplainer(model)
+        shap_values = explainer.shap_values(X.drop(columns=["wildfire"]))
+        # Summary Plot
+        summary_plot(
+            X.drop(columns=["wildfire"]),
+            model,
+            shap_values,
+            wildfire_images_path
+        )
+        # Dependence Plots
+        dependence_plot(
+            X.drop(columns=["wildfire"]),
+            X_display.drop(columns=["wildfire"]),
+            model,
+            shap_values,
+            wildfire_images_path
+        )
 
 
 def cross_validation_summary(model, X, y, images_path):

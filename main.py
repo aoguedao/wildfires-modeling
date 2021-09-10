@@ -73,6 +73,12 @@ def wfm_main(
         images_path
     )
 
+    wfm.group_model_and_explanation(
+        input_data,
+        model_parameters,
+        output_path,
+        images_path,
+    )
 
 if __name__ == "__main__":
     wfm_main()

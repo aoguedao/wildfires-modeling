@@ -53,7 +53,14 @@ def get_display_and_numeric_data(
 
 
 def _recall(y_true, y_pred):
-    tn, fp, fn, tp = confusion_matrix(y_true.astype(int), (y_pred > 0.5).astype(int)).ravel()
+    tn, fp, fn, tp = (
+        confusion_matrix(
+            y_true.astype(int),
+            (y_pred > 0.5).astype(int),
+            labels=[0, 1]
+        )
+        .ravel()
+    )
     return tp / (tp + fn)
 
 

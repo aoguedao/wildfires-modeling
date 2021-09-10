@@ -8,6 +8,7 @@ import seaborn as sns
 from pandas_profiling import ProfileReport
 from itertools import permutations
 from pandas.api.types import CategoricalDtype
+# from seaborn.palettes import husl_palette
 
 from wfm.constants import TARGET_COLUMN, NUM_COLUMNS, CAT_COLUMNS, SPANISH_NAMES
 
@@ -40,7 +41,11 @@ def eda(input_data, output_path, images_path):
     cat_histograms(input_data, images_path)
     num_histograms(input_data, images_path)
     num_scatters(input_data, images_path)
+    cat_histograms(input_data, images_path, histogram_hue="wildfire")
+    num_histograms(input_data, images_path, histogram_hue="wildfire")
     correlation(input_data, images_path)
+    kde(input_data, images_path)
+    kde(input_data, images_path, kde_hue="wildfire")
     # pairplot(input_data, images_path)  # Deprecated
 
 
@@ -76,20 +81,37 @@ def descriptive(input_data, output_path):
             )
         )
     )
+    target_per_wildfire = input_data.pivot_table(
+        index="wildfire",
+        columns="n_daño",
+        values="id",
+        aggfunc="count",
+        margins=True
+    )
     with pd.ExcelWriter(output_path / "descriptive_statistics.xlsx") as writer:
         descriptive_all.to_excel(writer, sheet_name="All")
         descriptive_grouped.to_excel(writer, sheet_name="Per Wildfire")
         descriptive_target.to_excel(writer, sheet_name="Per Target Label")
+        target_per_wildfire.to_excel(writer, sheet_name="Per Target and Wildfire")
         target_balance.to_excel(writer, sheet_name="Target Balance")
 
-def cat_histograms(input_data, images_path):
-    histogram_path = images_path / "histogram"
+
+def cat_histograms(input_data, images_path, histogram_hue=None):
+    if histogram_hue is None:
+        histogram_hue = TARGET_COLUMN
+    histogram_path = images_path / f"histogram_{histogram_hue}"
     histogram_path.mkdir(parents=True, exist_ok=True)
     input_data = (
         input_data.astype({col: CategoricalDtype(ordered=True) for col in CAT_COLUMNS + [TARGET_COLUMN]})
     )
-    redable_target = SPANISH_NAMES[TARGET_COLUMN]
+    redable_target = SPANISH_NAMES[histogram_hue]
     for col in CAT_COLUMNS:
+        if histogram_hue == col:
+            continue
+        if histogram_hue == TARGET_COLUMN:
+            histogram_hue_order = ["Parcial", "Total", "Ninguno"]
+        else:
+            histogram_hue_order = None
         logger.info(f"Categorical histogram {col}")
         redable_col = SPANISH_NAMES[col]
         df = (
@@ -101,8 +123,8 @@ def cat_histograms(input_data, images_path):
         g = sns.histplot(
             df,
             x=col,
-            hue=TARGET_COLUMN,
-            hue_order=["Parcial", "Total", "Ninguno"],
+            hue=histogram_hue,
+            hue_order=histogram_hue_order,
             multiple="dodge",
             shrink=.8,
             palette="Set2",
@@ -118,23 +140,28 @@ def cat_histograms(input_data, images_path):
         plt.close()
 
 
-def num_histograms(input_data, images_path):
-    histogram_path = images_path / "histogram"
+def num_histograms(input_data, images_path, histogram_hue=None):
+    if histogram_hue is None:
+        histogram_hue = TARGET_COLUMN
+    if histogram_hue == TARGET_COLUMN:
+        histogram_hue_order = ["Parcial", "Total", "Ninguno"]
+    else:
+        histogram_hue_order = None
+    histogram_path = images_path / f"histogram_{histogram_hue}"
     histogram_path.mkdir(parents=True, exist_ok=True)
-    df = (
-        input_data.copy()#.fillna("N/A")
-        # .astype({col: "category" for col in CAT_COLUMNS})
-    )
+    df = input_data.copy()
+    redable_target = SPANISH_NAMES[histogram_hue]
     for col in NUM_COLUMNS:
+        if histogram_hue == col:
+            continue
         logger.info(f"Histogram {col}")
         redable_col = SPANISH_NAMES[col]
-        redable_target = SPANISH_NAMES[TARGET_COLUMN]
         plt.figure(figsize=(10, 8))
         g = sns.histplot(
             df.sort_values(col),
             x=col,
-            hue=TARGET_COLUMN,
-            hue_order=["Parcial", "Total", "Ninguno"],
+            hue=histogram_hue,
+            hue_order=histogram_hue_order,
             multiple="stack",
             # shrink=.8,
             palette="Set2",
@@ -223,3 +250,42 @@ def correlation(input_data, images_path):
     plt.tight_layout()
     plt.savefig(images_path / f"correlation.png", dpi=300)
     plt.close()
+
+
+def kde(input_data, images_path, kde_hue=None):
+    if kde_hue is None:
+        kde_hue = TARGET_COLUMN
+    if kde_hue == TARGET_COLUMN:
+        kde_hue_order = ["Parcial", "Total", "Ninguno"]
+    else:
+        kde_hue_order = None
+    kde_path = images_path / f"kde_{kde_hue}"
+    kde_path.mkdir(parents=True, exist_ok=True)
+    df = input_data.copy()
+    redable_target = SPANISH_NAMES[kde_hue]
+    for col in NUM_COLUMNS:
+        if kde_hue == col:
+            continue
+        logger.info(f"KDE {col}")
+        redable_col = SPANISH_NAMES[col]
+        plt.figure(figsize=(10, 8))
+        g = sns.kdeplot(
+            data=df.sort_values(col),
+            x=col,
+            hue=kde_hue,
+            hue_order=kde_hue_order,
+            common_norm=False,
+            common_grid=True,
+            palette="Set2",
+            fill=True,
+            alpha=0.5,
+            legend=True,
+        )
+        g.get_legend().set_title(redable_target)
+        plt.xlabel(redable_col)
+        plt.ylabel("Conteo")
+        plt.xticks(rotation=50.4, horizontalalignment="left")
+        plt.title(f"Kernel Density Estimate de {redable_col} por {redable_target}")
+        plt.tight_layout()
+        plt.savefig(kde_path / f"kde_{col}.png")
+        plt.close()
