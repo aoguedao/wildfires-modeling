@@ -47,7 +47,7 @@ def main(
 
     # Data
     input_data = wfm.preprocessing.get_input_data(input_path)
-    # wfm.profile(input_data, output_path)
+    wfm.profile(input_data, output_path)
     wfm.eda(input_data, output_path, images_path)
 
 

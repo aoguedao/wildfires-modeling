@@ -39,7 +39,6 @@ def wfm_main(
     path = Path(__file__).resolve().parent
     if input_path is None:
         input_path = path / "input"
-    # wfm.preprocessing.validate_columns(input_path)
     if output_path is None:
         output_path = path / "output"
     else:
