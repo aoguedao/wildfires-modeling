@@ -1,15 +1,16 @@
 # Wildfires Modeling (WFM)
 
-This project aims to determine most influential features regarding the damage suffered by houses caused by forest fires using multivariate statistical models.
+The aim of this project is to determine most influential features regarding the damage suffered by houses caused by forest fires using multivariate statistical models.
 
+This research was supported by Fondecyt grant 1191543, Integration of remote sensing and direct data for multi-scale, dynamic mapping of urban exposure to flood, earthquakes and fire hazards (P. Aguirre).
 
 ## Methodology
 
 * Exploratory Data Analysis
 * Data Cleaning
 * Feature Selection
-* Binary Classification (['LightGBM'](https://lightgbm.readthedocs.io/))
-* Feature Importance (['shap'](https://shap.readthedocs.io/))
+* Binary Classification ([`LightGBM`](https://lightgbm.readthedocs.io/))
+* Feature Importance ([`shap`](https://shap.readthedocs.io/))
 
 
 ## Setup
